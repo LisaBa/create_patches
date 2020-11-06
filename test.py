@@ -6,5 +6,5 @@ filename = r"C:\Users\Lisapisa\Documents\Master\Masterthesis\original_data\Lands
 new = PatchCreator(filename)
 new.print_info()
 
-
 # Create patches and write into new files
+new.create_patches()

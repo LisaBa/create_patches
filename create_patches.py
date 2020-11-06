@@ -2,6 +2,8 @@ import numpy as np
 import dask.array as da
 import xarray as xr
 import rasterio
+import rioxarray as riox
+import matplotlib.pyplot as plt
 
 
 class PatchCreator:
@@ -20,7 +22,10 @@ class PatchCreator:
         print("Width: ", self.data.sizes["x"])
         print("Height: ", self.data.sizes["y"])
         print("Total Number of Pixels: ", self.data.sizes["x"] * self.data.sizes["y"])
-        print("Number of resulting patches: ", int((self.data.sizes["x"] * self.data.sizes["y"])/(256*256)))
+        print(
+            "Number of resulting patches: ",
+            int((self.data.sizes["x"] * self.data.sizes["y"]) / (256 * 256)),
+        )
 
     def load_data(self):
         data = xr.open_rasterio(
@@ -28,4 +33,15 @@ class PatchCreator:
             chunks={"band": self.n_bands, "x": self.chunks_x, "y": self.chunks_y},
         )
         return data
+
+    def create_patches(self):
+        # If its not dividable it need padding!
+        # Do I even need to export again, or can I just work with the xarray object?
+        patch = self.data[:, 40000:40256, 40000:40256]
+        # patch.rio.to_raster(
+        #     r"C:\Users\Lisapisa\Documents\Master\Masterthesis\test_patch.tif"
+        # )
+        plt.imshow(patch[0, :, :])
+        plt.show()
+        print("Patch created: ", patch)
 
