@@ -1,0 +1,7 @@
+name: ma
+dependencies:
+  - python=3.7
+  - numpy
+  - xarray
+  - dask
+  - rasterio
