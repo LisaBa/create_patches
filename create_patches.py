@@ -1,8 +1,13 @@
 import numpy as np
 import dask.array as da
+import xarray as xr
+import rasterio
 
-# Read file as dask array
-filename = r'C:\Users\Lisapisa\Documents\Master\Masterthesis\original_data\Landsberg\BaseImage.tif'
-print("Filename: ", filename)
 
-# Create patches and write into new files
+class PatchCreator:
+    def __init__(self, filename):
+        self.filename = filename
+
+    def print_filename(self):
+        print("Filename: ", self.filename)
+
