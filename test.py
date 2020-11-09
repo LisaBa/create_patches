@@ -7,4 +7,8 @@ new = PatchCreator(filename)
 new.print_info()
 
 # Create patches and write into new files
-new.create_patches()
+# new.create_patches()
+sub = new.create_subset()
+new.plot_data(x=sub)
+patch = new.create_patches()
+new.plot_data(patch)

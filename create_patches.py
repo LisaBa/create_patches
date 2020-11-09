@@ -34,14 +34,23 @@ class PatchCreator:
         )
         return data
 
+    def create_subset(self):
+        subset = self.data[:, 20000:22000, 10000:12000]
+        print(subset)
+        return subset
+
+    def plot_data(self, x):
+        x = x.transpose("x", "y", "band")
+        plt.imshow(x[:, :, :])
+        plt.show()
+
     def create_patches(self):
         # If its not dividable it need padding!
         # Do I even need to export again, or can I just work with the xarray object?
-        patch = self.data[:, 40000:40256, 40000:40256]
+        patch = self.data[:, 20000:20256, 10000:10256]
         # patch.rio.to_raster(
         #     r"C:\Users\Lisapisa\Documents\Master\Masterthesis\test_patch.tif"
         # )
-        plt.imshow(patch[0, :, :])
-        plt.show()
         print("Patch created: ", patch)
+        return patch
 
