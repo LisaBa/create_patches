@@ -6,18 +6,12 @@ import rasterio
 filename = (
     "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/annotated_area.tif"
 )
+mask_filename = ()
 output_folder = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_auto"
 
 new = PatchCreator(filename, output_folder)
-new.print_info()
-new.create_subset()
+# new.print_info()
 
-# Create patches and write into new files
-# new.create_patches()
-# sub = new.create_subset()
-# new.plot_data(x=sub)
-# new.create_patches()
+new.create_single_patch(9472, 0, 256, 256, 999)
 
-# test = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples/images/000000000.tif"
-# t = xr.open_rasterio(test)
-# print(t)
+# new.create_patches(start_index=0)
