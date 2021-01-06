@@ -15,11 +15,11 @@ class PatchCreator:
         image_filename,
         mask_filename,
         output_folder,
-        index_start=0,
         n_bands=3,
         patchsize_x=256,
         patchsize_y=256,
         stride=128,
+        start_index=0,
     ):
         self.image_filename = image_filename
         self.mask_filename = mask_filename
@@ -28,6 +28,7 @@ class PatchCreator:
         self.patchsize_x = patchsize_x
         self.patchsize_y = patchsize_y
         self.stride = stride
+        self.start_index = start_index
         self.num_patches_x = None
         self.num_patches_y = None
 
@@ -65,7 +66,7 @@ class PatchCreator:
             self.mask.sizes["y"],
         )
         print(
-            "Number of resulting patches: ", self._calculate_num_patches(),
+            "Max. number of resulting patches: ", self._calculate_num_patches(),
         )
 
     def load_data(self):
@@ -118,12 +119,13 @@ class PatchCreator:
             self.mask_filename, "labels", col_off, row_off, width, height, idx_zeros
         )
 
-    def create_patches(self, start_index, width=256, height=256, stride=0):
+    def create_patches(self):
         # Create output folders for images and labels or check if they already exist
         # os.mkdir(os.path.join(self.output_folder, "images"))
         # os.mkdir(os.path.join(self.output_folder, "labels"))
 
-        idx = start_index
+        idx = self.start_index
+
         for col in range(self.num_patches_x):
             for row in range(self.num_patches_y):
                 min_x = col * self.stride
@@ -134,18 +136,19 @@ class PatchCreator:
                 with rasterio.open(self.mask_filename) as src:
                     w = src.read(window=win)
                 pv_pixel_sum = np.sum(w == 1)
+                # print(np.unique(w))
 
                 # I used an offset of 1 as there seems to be an extra line of pixels at the top of the mask
                 # so with min_y + 1 theres no NA value
-                # The sum of panel pixels need to be at least 100
+                # The sum of panel pixels need to be at least 200
                 if pv_pixel_sum >= 200:
                     self._create_single_patch(col_off=min_x, row_off=min_y, index=idx)
                     # print(f"Created patch {idx}")
                     idx += 1
+            perc = (col / self.num_patches_x) * 100
+            print("{:.2f} %% of patches done".format(perc))
 
-            print(f"{(col/self.num_patches_x) * 100}% of patches done")
-
-        print(f"{self.num_patches_x*self.num_patches_y} patches created!")
+        print(f"{idx - self.start_index} patches created!")
 
         def plot_data(self, x):
             x = x.transpose("x", "y", "band")
