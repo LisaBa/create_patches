@@ -5,14 +5,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Read file as xarray in chunks of 3x256x256
-image_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/annotated_area.tif"
-mask_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/Landsberg_panels.tif"
-output_folder = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_auto"
+image_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Other_Solar_Data/Bradbury2020/Modesto/Modesto_clipped.tif"
+mask_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Other_Solar_Data/Bradbury2020/Modesto/Modesto_panels.tif"
+output_folder = (
+    "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_Modesto"
+)
 
-new = PatchCreator(image_filename, mask_filename, output_folder)
+# image_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/annotated_area.tif"
+# mask_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/Landsberg_panels.tif"
+# output_folder = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_auto"
+
+new = PatchCreator(image_filename, mask_filename, output_folder, start_index=591)
 new.print_info()
 
-new.create_patches(start_index=0)
+new.create_patches()
 
 
 # Load examples
