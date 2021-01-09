@@ -7,6 +7,7 @@ import rioxarray as riox
 import matplotlib.pyplot as plt
 import os
 import math
+from PIL import Image
 
 
 class PatchCreator:
@@ -150,8 +151,62 @@ class PatchCreator:
 
         print(f"{idx - self.start_index} patches created!")
 
-        def plot_data(self, x):
-            x = x.transpose("x", "y", "band")
-            plt.imshow(x[:, :, :])
-            plt.show()
+    def create_patches_classification(self):
+        # Create output folders for images and labels or check if they already exist
+        # os.mkdir(os.path.join(self.output_folder, "images"))
+        # os.mkdir(os.path.join(self.output_folder, "labels"))
+
+        pos_idx = self.start_index
+        neg_idx = self.start_index
+
+        for col in range(self.num_patches_x):
+            # for col in range(10):
+            for row in range(self.num_patches_y):
+                # for row in range(10):
+                min_x = col * self.stride
+                min_y = row * self.stride
+
+                win = Window(min_x, min_y, self.patchsize_x, self.patchsize_y)
+                with rasterio.open(self.mask_filename) as src:
+                    w = src.read(window=win)
+                pv_pixel_sum = np.sum(w == 1)
+
+                # Positive examples with at least 100 pixels of PV in them
+                if pv_pixel_sum >= 100:
+                    # self._create_single_patch(col_off=min_x, row_off=min_y, index=idx)
+                    # Create image patch
+                    win = Window(min_x, min_y, self.patchsize_x, self.patchsize_y)
+                    with rasterio.open(self.image_filename) as src:
+                        w = src.read(window=win)
+                    w = w.transpose(1, 2, 0)
+                    im = Image.fromarray(w.astype("uint8"), "RGB")
+                    im.save(
+                        os.path.join(self.output_folder, "1", str(pos_idx + 1) + ".png")
+                    )
+
+                    pos_idx += 1
+
+                # Negative sample with less than 100 pixels of PV in them
+                else:
+                    # Create image patch
+                    win = Window(min_x, min_y, self.patchsize_x, self.patchsize_y)
+                    with rasterio.open(self.image_filename) as src:
+                        w = src.read(window=win)
+                    w = w.transpose(1, 2, 0)
+                    im = Image.fromarray(w.astype("uint8"), "RGB")
+                    im.save(
+                        os.path.join(self.output_folder, "0", str(neg_idx + 1) + ".png")
+                    )
+
+                    neg_idx += 1
+
+            perc = (col / self.num_patches_x) * 100
+            print("{:.2f} %% of patches done".format(perc))
+
+        print(f"{pos_idx+neg_idx - self.start_index} patches created!")
+
+    def plot_data(self, x):
+        x = x.transpose("x", "y", "band")
+        plt.imshow(x[:, :, :])
+        plt.show()
 
