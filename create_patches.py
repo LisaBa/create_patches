@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import math
 from PIL import Image
+from sklearn.model_selection import train_test_split
 
 
 class PatchCreator:
@@ -32,10 +33,13 @@ class PatchCreator:
         self.start_index = start_index
         self.num_patches_x = None
         self.num_patches_y = None
+        self.total_num_patches = None
 
         self.image, self.mask = self.load_data()
         self.mask_total_width = self.mask.sizes["x"]
         self.mask_total_height = self.mask.sizes["y"]
+
+        self.print_info()
 
     def _calculate_num_patches(self):
         width = self.mask_total_width
@@ -47,7 +51,8 @@ class PatchCreator:
         self.num_patches_x = math.floor((width - patchsize_x) / stride) + 1
         self.num_patches_y = math.floor((height - patchsize_y) / stride) + 1
 
-        return self.num_patches_x, self.num_patches_y
+        self.total_num_patches = self.num_patches_x * self.num_patches_y
+        return self.total_num_patches
 
     def print_info(self):
         print("Image filename: ", self.image_filename)
@@ -122,8 +127,10 @@ class PatchCreator:
 
     def create_patches(self):
         # Create output folders for images and labels or check if they already exist
-        # os.mkdir(os.path.join(self.output_folder, "images"))
-        # os.mkdir(os.path.join(self.output_folder, "labels"))
+        if not os.path.isdir(os.path.join(self.output_folder, "images")):
+            os.mkdir(os.path.join(self.output_folder, "images"))
+        if not os.path.isdir(os.path.join(self.output_folder, "labels")):
+            os.mkdir(os.path.join(self.output_folder, "labels"))
 
         idx = self.start_index
 
@@ -132,7 +139,7 @@ class PatchCreator:
                 min_x = col * self.stride
                 min_y = row * self.stride
 
-                # Check if mask has at least 10 pixels with pv on it
+                # Check if mask has at least 200 pixels with pv on it
                 win = Window(min_x, min_y, self.patchsize_x, self.patchsize_y)
                 with rasterio.open(self.mask_filename) as src:
                     w = src.read(window=win)
@@ -151,18 +158,27 @@ class PatchCreator:
 
         print(f"{idx - self.start_index} patches created!")
 
-    def create_patches_classification(self):
-        # Create output folders for images and labels or check if they already exist
-        # os.mkdir(os.path.join(self.output_folder, "images"))
-        # os.mkdir(os.path.join(self.output_folder, "labels"))
+    def create_patches_classification(
+        self, test_set=False, test_split=0.25, eval_set=False
+    ):
+        index_list = list(range(self.total_num_patches))
+        train_idxs, test_idxs = train_test_split(
+            index_list, test_size=test_split, random_state=42
+        )
+        test_idxs, eval_idxs = train_test_split(
+            test_idxs, test_size=test_split, random_state=42
+        )
 
-        pos_idx = self.start_index
-        neg_idx = self.start_index
+        pos_idx_train = self.start_index
+        pos_idx_test = self.start_index
+        pos_idx_eval = self.start_index
+        neg_idx_train = self.start_index
+        neg_idx_test = self.start_index
+        neg_idx_eval = self.start_index
+        total_idx = self.start_index
 
         for col in range(self.num_patches_x):
-            # for col in range(10):
             for row in range(self.num_patches_y):
-                # for row in range(10):
                 min_x = col * self.stride
                 min_y = row * self.stride
 
@@ -173,18 +189,28 @@ class PatchCreator:
 
                 # Positive examples with at least 100 pixels of PV in them
                 if pv_pixel_sum >= 100:
-                    # self._create_single_patch(col_off=min_x, row_off=min_y, index=idx)
                     # Create image patch
                     win = Window(min_x, min_y, self.patchsize_x, self.patchsize_y)
                     with rasterio.open(self.image_filename) as src:
                         w = src.read(window=win)
                     w = w.transpose(1, 2, 0)
                     im = Image.fromarray(w.astype("uint8"), "RGB")
-                    im.save(
-                        os.path.join(self.output_folder, "1", str(pos_idx + 1) + ".png")
-                    )
+                    if total_idx in train_idxs:
+                        f = "SPI_train"
+                        i = pos_idx_train
+                        pos_idx_train += 1
+                    elif total_idx in test_idxs:
+                        f = "SPI_val"
+                        i = pos_idx_test
+                        pos_idx_test += 1
+                    elif total_idx in eval_idxs:
+                        f = "SPI_eval"
+                        i = pos_idx_eval
+                        pos_idx_eval += 1
 
-                    pos_idx += 1
+                    im.save(os.path.join(self.output_folder, f, "1", str(i) + ".png",))
+
+                    # pos_idx += 1
 
                 # Negative sample with less than 100 pixels of PV in them
                 else:
@@ -194,16 +220,29 @@ class PatchCreator:
                         w = src.read(window=win)
                     w = w.transpose(1, 2, 0)
                     im = Image.fromarray(w.astype("uint8"), "RGB")
-                    im.save(
-                        os.path.join(self.output_folder, "0", str(neg_idx + 1) + ".png")
-                    )
 
-                    neg_idx += 1
+                    if total_idx in train_idxs:
+                        f = "SPI_train"
+                        i = neg_idx_train
+                        neg_idx_train += 1
+                    elif total_idx in test_idxs:
+                        f = "SPI_val"
+                        i = neg_idx_test
+                        neg_idx_test += 1
+                    elif total_idx in eval_idxs:
+                        f = "SPI_eval"
+                        i = neg_idx_eval
+                        neg_idx_eval += 1
 
+                    im.save(os.path.join(self.output_folder, f, "0", str(i) + ".png",))
+
+                    # neg_idx += 1
+
+                total_idx += 1
             perc = (col / self.num_patches_x) * 100
             print("{:.2f} %% of patches done".format(perc))
 
-        print(f"{pos_idx+neg_idx - self.start_index} patches created!")
+        print(f"{self.total_num_patches} patches created!")
 
     def plot_data(self, x):
         x = x.transpose("x", "y", "band")
