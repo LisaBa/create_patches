@@ -10,24 +10,27 @@ import numpy as np
 # output_folder = (
 #     "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_Modesto"
 # )
-output_folder = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Other_Solar_Data/DeepSolar"
+# output_folder = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Other_Solar_Data/DeepSolar"
 
 image_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/annotated_area.tif"
-mask_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/Landsberg_panels.tif"
-# output_folder = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_auto"
+mask_filename = "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/Landsberg/Landsberg_panels_negative_ex.tif"
+output_folder = (
+    "C:/Users/Lisapisa/Documents/Master/Masterthesis/01-Raster/samples_negative"
+)
 
 new = PatchCreator(
     image_filename,
     mask_filename,
     output_folder,
-    start_index=1,
-    patchsize_x=320,
-    patchsize_y=320,
-    stride=160,
+    start_index=591,
+    patchsize_x=256,
+    patchsize_y=256,
+    stride=128,
 )
 
-# new.create_patches()
-new.create_patches_classification()
+new.create_patches(panels=False)
+
+# new.create_patches_classification()
 
 
 # Load examples
