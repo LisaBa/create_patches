@@ -125,7 +125,17 @@ class PatchCreator:
             self.mask_filename, "labels", col_off, row_off, width, height, idx_zeros
         )
 
-    def create_patches(self):
+    def create_patches(self, panels=True, min_pixel=200):
+        self.panels = panels
+        self.min_pixel = min_pixel
+        pv_pixel_sum = 0
+
+        # Check for existence of panels (1) or of explicit negative examples (2)
+        if self.panels:
+            check_value = 1
+        else:
+            check_value = 2
+
         # Create output folders for images and labels or check if they already exist
         if not os.path.isdir(os.path.join(self.output_folder, "images")):
             os.mkdir(os.path.join(self.output_folder, "images"))
@@ -143,13 +153,13 @@ class PatchCreator:
                 win = Window(min_x, min_y, self.patchsize_x, self.patchsize_y)
                 with rasterio.open(self.mask_filename) as src:
                     w = src.read(window=win)
-                pv_pixel_sum = np.sum(w == 1)
-                # print(np.unique(w))
+                relevant_pixel_sum = np.sum(w == check_value)
+                # If negative class is checked then make sure to not include samples with panels on them, as I would use them twice otherwise
+                if not self.panels:
+                    pv_pixel_sum = np.sum(w == 1)
 
-                # I used an offset of 1 as there seems to be an extra line of pixels at the top of the mask
-                # so with min_y + 1 theres no NA value
-                # The sum of panel pixels need to be at least 200
-                if pv_pixel_sum >= 200:
+                # The sum of panel pixels need to be at least min_pixel
+                if relevant_pixel_sum >= self.min_pixel and pv_pixel_sum <= 10:
                     self._create_single_patch(col_off=min_x, row_off=min_y, index=idx)
                     # print(f"Created patch {idx}")
                     idx += 1
